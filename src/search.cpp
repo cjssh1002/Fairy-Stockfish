@@ -332,9 +332,25 @@ void MainThread::search() {
 
   if (Options["Protocol"] == "xboard")
   {
+      Move bestmove = bestThread->rootMoves[0].pv[0];
+      // Wait for virtual drop to become real
+      if (rootPos.two_boards() && rootPos.virtual_drop(bestmove))
+      {
+          Partner.ptell("fast");
+          while (!Threads.abort && !Partner.partnerDead && !Partner.fast && Limits.time[us] - Time.elapsed() > Partner.opptime)
+          {}
+          Partner.ptell("x");
+          // Find best real move
+          for (const auto& m : this->rootMoves)
+              if (!rootPos.virtual_drop(m.pv[0]))
+              {
+                  bestmove = m.pv[0];
+                  break;
+              }
+      }
       // Send move only when not in analyze mode and not at game end
-      if (!Options["UCI_AnalyseMode"] && rootMoves[0].pv[0] != MOVE_NONE && !Threads.abort.exchange(true))
-          sync_cout << "move " << UCI::move(rootPos, bestThread->rootMoves[0].pv[0]) << sync_endl;
+      if (!Options["UCI_AnalyseMode"] && bestmove != MOVE_NONE && !Threads.abort.exchange(true))
+          sync_cout << "move " << UCI::move(rootPos, bestmove) << sync_endl;
       return;
   }
 
@@ -608,12 +624,12 @@ void Thread::search() {
                   Partner.ptell("x");
                   Partner.weWin = false;
               }
-              else if (!Partner.weVirtualWin && bestValue >= VALUE_VIRTUAL_MATE_IN_MAX_PLY && Limits.time[us] > Partner.opptime)
+              else if (!Partner.weVirtualWin && bestValue >= VALUE_VIRTUAL_MATE_IN_MAX_PLY && Limits.time[us] - Time.elapsed() > Partner.opptime)
               {
                   Partner.ptell("fast");
                   Partner.weVirtualWin = true;
               }
-              else if (Partner.weVirtualWin && (bestValue < VALUE_VIRTUAL_MATE_IN_MAX_PLY || Limits.time[us] < Partner.opptime))
+              else if (Partner.weVirtualWin && (bestValue < VALUE_VIRTUAL_MATE_IN_MAX_PLY || Limits.time[us] - Time.elapsed() < Partner.opptime))
               {
                   Partner.ptell("slow");
                   Partner.weVirtualWin = false;
