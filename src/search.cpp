@@ -74,8 +74,8 @@ namespace {
   // Reductions lookup table, initialized at startup
   int Reductions[MAX_MOVES]; // [depth or moveNumber]
 
-  Depth reduction(bool i, Depth d, int mn) {
-    int r = Reductions[d] * Reductions[mn];
+  Depth reduction(bool i, Depth d, int mn, const Position& pos) {
+    int r = Reductions[d] * Reductions[mn] * 2 / (2 + pos.captures_to_hand() + pos.must_capture());
     return (r + 511) / 1024 + (!i && r > 1007);
   }
 
@@ -1088,7 +1088,7 @@ moves_loop: // When in check, search starts from here
               && !(pos.must_capture() && pos.attackers_to(to_sq(move), ~us)))
           {
               // Reduced depth of the next LMR search
-              int lmrDepth = std::max(newDepth - reduction(improving, depth, moveCount), 0);
+              int lmrDepth = std::max(newDepth - reduction(improving, depth, moveCount, pos), 0);
 
               // Countermoves based pruning (~20 Elo)
               if (   lmrDepth < 4 + ((ss-1)->statScore > 0 || (ss-1)->moveCount == 1)
@@ -1215,7 +1215,7 @@ moves_loop: // When in check, search starts from here
               || thisThread->ttHitAverage < 375 * ttHitAverageResolution * ttHitAverageWindow / 1024)
           && !(pos.must_capture() && MoveList<CAPTURES>(pos).size()))
       {
-          Depth r = reduction(improving, depth, moveCount);
+          Depth r = reduction(improving, depth, moveCount, pos);
 
           // Decrease reduction if the ttHit running average is large
           if (thisThread->ttHitAverage > 500 * ttHitAverageResolution * ttHitAverageWindow / 1024)
