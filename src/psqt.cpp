@@ -195,6 +195,8 @@ void init(const Variant* v) {
                                                 : make_score(5, 5) * (2 * f + std::max(std::min(r, Rank(v->maxRank - r)), RANK_1) - 8));
           if (pt == SOLDIER && r < v->soldierPromotionRank)
               psq[pc][s] -= score * (v->soldierPromotionRank - r) / (4 + f);
+          if (v->capturesToHand && pt == KING)
+              psq[pc][s] = make_score(mg_value(psq[pc][s]), mg_value(psq[pc][s]));
           psq[~pc][rank_of(s) <= v->maxRank ? relative_square(BLACK, s, v->maxRank) : s] = -psq[pc][s];
       }
       // pieces in pocket
