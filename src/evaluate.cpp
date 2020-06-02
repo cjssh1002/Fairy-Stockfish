@@ -428,17 +428,18 @@ namespace {
   Score Evaluation<T>::hand(PieceType pt) {
 
     constexpr Color Them = (Us == WHITE ? BLACK : WHITE);
+    constexpr Direction Down = pawn_push(Them);
 
     Score score = SCORE_ZERO;
 
     if (pos.count_in_hand(Us, pt))
     {
         Bitboard b = pos.drop_region(Us, pt) & ~pos.pieces() & (~attackedBy2[Them] | attackedBy[Us][ALL_PIECES]);
-        if ((b & kingRing[Them]) && pt != SHOGI_PAWN)
+        if ((b & (kingRing[Them] | shift<Down>(kingRing[Them]))) && pt != SHOGI_PAWN)
         {
             kingAttackersCountInHand[Us] += pos.count_in_hand(Us, pt);
             kingAttackersWeightInHand[Us] += KingAttackWeights[std::min(int(pt), QUEEN + 1)] * pos.count_in_hand(Us, pt);
-            kingAttacksCount[Us] += popcount(b & attackedBy[Them][KING]);
+            kingAttacksCount[Us] += pos.count_in_hand(Us, pt);
         }
         Bitboard theirHalf = pos.board_bb() & ~forward_ranks_bb(Them, relative_rank(Them, Rank((pos.max_rank() - 1) / 2), pos.max_rank()));
         mobility[Us] += DropMobility * popcount(b & theirHalf & ~attackedBy[Them][ALL_PIECES]);
