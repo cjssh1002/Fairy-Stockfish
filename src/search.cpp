@@ -889,9 +889,6 @@ namespace {
     // Step 7. Razoring (~1 Elo)
     if (   !rootNode // The required rootNode PV handling is not available in qsearch
         &&  depth < 2
-        && !pos.must_capture()
-        && !pos.capture_the_flag_piece()
-        && !pos.check_counting()
         &&  eval <= alpha - RazorMargin)
         return qsearch<NT>(pos, ss, alpha, beta);
 
