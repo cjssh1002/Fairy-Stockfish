@@ -964,49 +964,6 @@ namespace {
         }
     }
 
-    // Step 10. ProbCut (~10 Elo)
-    // If we have a good enough capture and a reduced search returns a value
-    // much above beta, we can (almost) safely prune the previous move.
-    if (   !PvNode
-        &&  depth >= 5
-        &&  abs(beta) < VALUE_TB_WIN_IN_MAX_PLY)
-    {
-        Value raisedBeta = std::min(beta + (189 + 20 * !!pos.capture_the_flag_piece()) * (1 + pos.check_counting() + (pos.extinction_value() != VALUE_NONE)) - 45 * improving, VALUE_INFINITE);
-        MovePicker mp(pos, ttMove, raisedBeta - ss->staticEval, &thisThread->captureHistory);
-        int probCutCount = 0;
-
-        while (  (move = mp.next_move()) != MOVE_NONE
-               && probCutCount < 2 + 2 * cutNode)
-            if (move != excludedMove && pos.legal(move))
-            {
-                assert(pos.capture_or_promotion(move));
-                assert(depth >= 5);
-
-                captureOrPromotion = true;
-                probCutCount++;
-
-                ss->currentMove = move;
-                ss->continuationHistory = &thisThread->continuationHistory[inCheck]
-                                                                          [captureOrPromotion]
-                                                                          [history_slot(pos.moved_piece(move))]
-                                                                          [to_sq(move)];
-
-                pos.do_move(move, st);
-
-                // Perform a preliminary qsearch to verify that the move holds
-                value = -qsearch<NonPV>(pos, ss+1, -raisedBeta, -raisedBeta+1);
-
-                // If the qsearch held, perform the regular search
-                if (value >= raisedBeta)
-                    value = -search<NonPV>(pos, ss+1, -raisedBeta, -raisedBeta+1, depth - 4, !cutNode);
-
-                pos.undo_move(move);
-
-                if (value >= raisedBeta)
-                    return value;
-            }
-    }
-
     // Step 11. Internal iterative deepening (~1 Elo)
     if (depth >= (7 - 2 * pos.captures_to_hand()) && !ttMove)
     {
