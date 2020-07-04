@@ -902,16 +902,6 @@ namespace {
     if (pos.must_capture() && MoveList<CAPTURES>(pos).size())
         goto moves_loop;
 
-    // Step 8. Futility pruning: child node (~50 Elo)
-    if (   !PvNode
-        &&  depth < 6
-        && !(   pos.extinction_value() == -VALUE_MATE
-             && pos.extinction_piece_types().find(ALL_PIECES) == pos.extinction_piece_types().end())
-        && !(pos.capture_the_flag_piece() && !pos.checking_permitted())
-        &&  eval - futility_margin(depth, improving) * (1 + pos.check_counting() + 2 * pos.must_capture()) >= beta
-        &&  eval < VALUE_KNOWN_WIN) // Do not return unproven wins
-        return eval;
-
     // Step 9. Null move search with verification search (~40 Elo)
     if (   !PvNode
         && (ss-1)->currentMove != MOVE_NULL
