@@ -1563,31 +1563,6 @@ moves_loop: // When in check, search starts from here
 
       moveCount++;
 
-      // Futility pruning
-      if (   !inCheck
-          && !givesCheck
-          && !(   pos.extinction_value() == -VALUE_MATE
-               && pos.extinction_piece_types().find(ALL_PIECES) == pos.extinction_piece_types().end())
-          &&  futilityBase > -VALUE_KNOWN_WIN
-          && !pos.advanced_pawn_push(move))
-      {
-          assert(type_of(move) != ENPASSANT); // Due to !pos.advanced_pawn_push
-
-          futilityValue = futilityBase + PieceValue[EG][pos.piece_on(to_sq(move))];
-
-          if (futilityValue <= alpha)
-          {
-              bestValue = std::max(bestValue, futilityValue);
-              continue;
-          }
-
-          if (futilityBase <= alpha && !pos.see_ge(move, VALUE_ZERO + 1))
-          {
-              bestValue = std::max(bestValue, futilityBase);
-              continue;
-          }
-      }
-
       // Detect non-capture evasions that are candidates to be pruned
       evasionPrunable =    inCheck
                        &&  (depth != 0 || moveCount > 2)
