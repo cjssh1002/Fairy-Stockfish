@@ -1074,48 +1074,6 @@ moves_loop: // When in check, search starts from here
       // Calculate new depth for this move
       newDepth = depth - 1;
 
-      // Step 13. Pruning at shallow depth (~200 Elo)
-      if (  !rootNode
-          && (pos.non_pawn_material(us) || pos.count<ALL_PIECES>(us) == pos.count<PAWN>(us))
-          && bestValue > VALUE_TB_LOSS_IN_MAX_PLY)
-      {
-          // Skip quiet moves if movecount exceeds our FutilityMoveCount threshold
-          moveCountPruning = moveCount >= futility_move_count(improving, depth)
-                            || (pos.must_capture() && (moveCountPruning || (pos.capture(move) && pos.legal(move))));
-
-          if (   !captureOrPromotion
-              && !givesCheck
-              && !(pos.must_capture() && pos.attackers_to(to_sq(move), ~us)))
-          {
-              // Reduced depth of the next LMR search
-              int lmrDepth = std::max(newDepth - reduction(improving, depth, moveCount), 0);
-
-              // Countermoves based pruning (~20 Elo)
-              if (   lmrDepth < 4 + ((ss-1)->statScore > 0 || (ss-1)->moveCount == 1)
-                  && (*contHist[0])[history_slot(movedPiece)][to_sq(move)] < CounterMovePruneThreshold
-                  && (*contHist[1])[history_slot(movedPiece)][to_sq(move)] < CounterMovePruneThreshold)
-                  continue;
-
-              // Futility pruning: parent node (~5 Elo)
-              if (   lmrDepth < 6
-                  && !inCheck
-                  && !(   pos.extinction_value() == -VALUE_MATE
-                       && pos.extinction_piece_types().find(ALL_PIECES) == pos.extinction_piece_types().end())
-                  && ss->staticEval + (235 + 172 * lmrDepth) * (1 + pos.check_counting()) <= alpha
-                  &&  thisThread->mainHistory[us][from_to(move)]
-                    + (*contHist[0])[history_slot(movedPiece)][to_sq(move)]
-                    + (*contHist[1])[history_slot(movedPiece)][to_sq(move)]
-                    + (*contHist[3])[history_slot(movedPiece)][to_sq(move)] < 25000)
-                  continue;
-
-              // Prune moves with negative SEE (~20 Elo)
-              if (!pos.see_ge(move, Value(-(32 - std::min(lmrDepth, 18) + 10 * !!pos.capture_the_flag_piece()) * lmrDepth * lmrDepth)))
-                  continue;
-          }
-          else if (!pos.see_ge(move, Value(-194 - 120 * pos.captures_to_hand()) * depth)) // (~25 Elo)
-              continue;
-      }
-
       // Step 14. Extensions (~75 Elo)
 
       // Singular extension search (~70 Elo). If all moves but one fail low on a
