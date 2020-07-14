@@ -448,6 +448,8 @@ ExtMove* generate<QUIET_CHECKS>(const Position& pos, ExtMove* moveList) {
 
      if (pt == KING && pos.king_type() == KING)
          b &= ~PseudoAttacks[~us][QUEEN][pos.square<KING>(~us)];
+     else
+         b &= ~between_bb(from, pos.square<KING>(~us));
 
      while (b)
          moveList = make_move_and_gating<NORMAL>(pos, moveList, us, from, pop_lsb(&b));
