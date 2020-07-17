@@ -75,7 +75,7 @@ namespace {
   int Reductions[MAX_MOVES]; // [depth or moveNumber]
 
   Depth reduction(bool i, Depth d, int mn, const Position& pos) {
-    int r = Reductions[d] * Reductions[mn] * 2 / (2 + pos.captures_to_hand() + pos.must_capture());
+    int r = Reductions[d] * Reductions[mn] * 4 / (4 + pos.captures_to_hand() - pos.must_capture());
     return (r + 511) / 1024 + (!i && r > 1007);
   }
 
