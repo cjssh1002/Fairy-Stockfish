@@ -965,7 +965,7 @@ namespace {
     {
         int remainingChecks = pos.checks_remaining(Us);
         assert(remainingChecks > 0);
-        score += make_score(3600, 1000) / (remainingChecks * remainingChecks);
+        score += make_score(3600 / remainingChecks, pos.non_pawn_material(Us) / 4 + PawnValueEg * pos.count<PAWN>(Us)) / remainingChecks;
     }
 
     // Extinction
