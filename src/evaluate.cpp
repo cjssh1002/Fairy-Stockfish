@@ -936,6 +936,8 @@ namespace {
                                 | (pos.pieces(Them) & pe->pawn_attacks(Them))
                                 | (pawn_attacks_bb<Them>(pos.pieces(Them, PAWN) & pe->pawn_attacks(Them)));
         Bitboard inaccessible = pos.pieces(Us, PAWN) & shift<Down>(pos.pieces(Them, PAWN));
+        if (!pos.checking_permitted())
+            inaccessible |= attackedBy[Them][KING];
         // Traverse all paths of the CTF pieces to the CTF targets.
         // Put squares that are attacked or occupied on hold for one iteration.
         for (int dist = 0; (ctfPieces || onHold || onHold2) && (ctfTargets & ~processed); dist++)
